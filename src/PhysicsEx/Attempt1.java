@@ -92,7 +92,7 @@ public class Attempt1 extends Application {
         }
     }
 
-    public class Drop extends Sphere{
+    private class Drop extends Sphere{
         public double
             posX=0,posY=0,posZ=0,
             velX=0,velY=0,velZ=0,
@@ -115,7 +115,7 @@ public class Attempt1 extends Application {
         }
     }
 
-    public class Time extends AnimationTimer{
+    private class Time extends AnimationTimer{
         public Attempt1 host;
         public Time(Attempt1 host){
             this.host=host;
