@@ -17,12 +17,13 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Attempt2  extends Application {
     //==================================================================================================================util classes
     //*always there when you need it and can't use C# anonymous classes*
-    private class LaazyContainer<A,B,C,D,E,F,G,H>{
+    private static class LaazyContainer<A,B,C,D,E,F,G,H>{
         public A a;//1
         public B b;//2
         public C c;//3
@@ -95,66 +96,126 @@ public class Attempt2  extends Application {
         }
     }
     //vectors
-    private class Vector2{
-        public double a=0,b=0;
+    private static class Vector2{
+        public double x =0, y =0;
 
         public Vector2(){}
-        public Vector2(double a, double b){
-            this.a=a;
-            this.b=b;
+        public Vector2(double x, double y){
+            this.x = x;
+            this.y = y;
         }
 
         public Vector2 add(Vector2 vector){
-            return new Vector2(a+vector.a,b+vector.b);
+            return new Vector2(x +vector.x, y +vector.y);
         }
         public Vector2 substract(Vector2 vector){
-            return new Vector2(a-vector.a,b-vector.b);
+            return new Vector2(x -vector.x, y -vector.y);
         }
         public Vector2 abs(){
-            return new Vector2(MyMath.abs(a),MyMath.abs(b));
+            return new Vector2(MyMath.abs(x),MyMath.abs(y));
+        }
+        public Vector2 mul(double a){
+            return new Vector2(x*a,y*a);
         }
 
         public double vectorDistance() {
-            return Math.pow(MyMath.pow2(a) + MyMath.pow2(b), 0.5d);
+            return Math.pow(MyMath.pow2(x) + MyMath.pow2(y), 0.5d);
+        }
+
+        @Override
+        public String toString() {
+            return "Vector2{" +
+                    "x=" + x +
+                    ", y=" + y +
+                    '}';
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Vector2 vector2 = (Vector2) o;
+            return Double.compare(vector2.x, x) == 0 && Double.compare(vector2.y, y) == 0;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, y);
         }
     }
-    private class Vector3{
-        public double a=0,b=0,c=0;
+    private static class Vector3{
+        public double x =0, y =0, z =0;
 
         public Vector3(){}
-        public Vector3(double a, double b,double c){
-            this.a=a;
-            this.b=b;
-            this.c=c;
+        public Vector3(double x, double y, double z){
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
 
         public Vector3 add(Vector3 vector){
-            return new Vector3(a+vector.a,b+vector.b,c+vector.c);
+            return new Vector3(x +vector.x, y +vector.y, z +vector.z);
         }
         public Vector3 substract(Vector3 vector){
-            return new Vector3(a-vector.a,b-vector.b,c-vector.c);
+            return new Vector3(x -vector.x, y -vector.y, z -vector.z);
         }
         public Vector3 abs(){
-            return new Vector3(MyMath.abs(a),MyMath.abs(b),MyMath.abs(c));
+            return new Vector3(MyMath.abs(x),MyMath.abs(y),MyMath.abs(z));
         }
 
         public double vectorDistance(){
-            return Math.pow(MyMath.pow2(a)+MyMath.pow2(b)+MyMath.pow2(c),0.5d);
+            return Math.pow(MyMath.pow2(x)+MyMath.pow2(y)+MyMath.pow2(z),0.5d);
+        }
+
+        @Override
+        public String toString() {
+            return "Vector3{" +
+                    "x=" + x +
+                    ", y=" + y +
+                    ", z=" + z +
+                    '}';
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Vector3 vector3 = (Vector3) o;
+            return Double.compare(vector3.x, x) == 0 && Double.compare(vector3.y, y) == 0 && Double.compare(vector3.z, z) == 0;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, y, z);
         }
     }
     //==================================================================================================================primitive classes
-    private class AABB2{
+    private static class AABB2{
         public Vector2 center, halfSize;
         public boolean collide(AABB2 other){
             double tolerance = 0.1;
             Vector2 contact = halfSize.add(other.halfSize),//this is distance bellow which we got contact
-                    delta = center.substract(other.center).abs();//this is difference in location of two bodies
+                    delta = center.substract(other.center).abs();//this is absolute difference in location of two bodies
             delta = contact.substract(delta).substract(new Vector2(tolerance,tolerance));//how much is missing delta to reach contact (minus tolerance)
 
-            return delta.a<0||delta.b<0;
+            return delta.x <0||delta.y <0;
         }
     }
-    private abstract class RigidBody2 {
+    private static class Line2{
+        public Vector2 start, end;
+        public Line2(){
+            start = new Vector2(0,0);
+            end = new Vector2(1,1);
+        }
+        public Line2(Vector2 start, Vector2 end){
+            this.start=start;
+            this.end=end;
+        }
+        public boolean collide(Vector2 point){
+            Vector2 relativeEnd = end.substract(start),
+                    relativePoint = point.substract(start);
+            return relativeEnd//'original' solution. apparently works
+                    .mul(relativePoint.x)
+                    .equals(relativePoint.mul(relativeEnd.x));
+        }
+    }
+    private static abstract class RigidBody2 {
         public Vector2 position,
                        scale;
         public double rotation;
@@ -165,14 +226,14 @@ public class Attempt2  extends Application {
         }
         abstract public Node getShape();
     }
-    private class Box2 extends RigidBody2 {
+    private static class Box2 extends RigidBody2 {
         public Box box;
         @Override
         public Node getShape() {
             return box;
         }
     }
-    private class Circe2 extends RigidBody2 {
+    private static class Circe2 extends RigidBody2 {
         public Sphere sphere;
         @Override
         public Node getShape() {
@@ -185,7 +246,10 @@ public class Attempt2  extends Application {
     }
     //==================================================================================================================Fx classes
     public static void main(String[] args) {
-        launch(args);
+        boolean b = new Line2(new Vector2(0,1),new Vector2(8,5)).collide(new Vector2(4,3));
+
+
+        //launch(args);
     }
     private Group root;
     private PerspectiveCamera camera;
