@@ -19,83 +19,36 @@ import javafx.stage.Stage;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
+//partially based of tutorial series: https://www.youtube.com/watch?v=vcgtwY39FT0&list=PLtrSb4XxIVbpZpV65kk73OoUcIrBzoSiO&index=1
+//testing JavaDoc in practice
 public class Attempt2  extends Application {
     //==================================================================================================================util classes
-    //*always there when you need it and can't use C# anonymous classes*
-    private static class LaazyContainer<A,B,C,D,E,F,G,H>{
-        public A a;//1
-        public B b;//2
-        public C c;//3
-        public D d;//4
-        public E e;//5
-        public F f;//6
-        public G g;//7
-        public H h;//8
-        public LaazyContainer(A a,B b,C c,D d,E e,F f,G g,H h){
-            this.a=a;
-            this.b=b;
-            this.c=c;
-            this.d=d;
-            this.e=e;
-            this.f=f;
-            this.g=g;
-            this.h=h;
-        }
-        public LaazyContainer(A a,B b,C c,D d,E e,F f,G g){
-            this.a=a;
-            this.b=b;
-            this.c=c;
-            this.d=d;
-            this.e=e;
-            this.f=f;
-            this.g=g;
-        }
-        public LaazyContainer(A a,B b,C c,D d,E e,F f){
-            this.a=a;
-            this.b=b;
-            this.c=c;
-            this.d=d;
-            this.e=e;
-            this.f=f;
-        }
-        public LaazyContainer(A a,B b,C c,D d,E e){
-            this.a=a;
-            this.b=b;
-            this.c=c;
-            this.d=d;
-            this.e=e;
-        }
-        public LaazyContainer(A a,B b,C c,D d){
-            this.a=a;
-            this.b=b;
-            this.c=c;
-            this.d=d;
-        }
-        public LaazyContainer(A a,B b,C c){
-            this.a=a;
-            this.b=b;
-            this.c=c;
-        }
-        public LaazyContainer(A a,B b){
-            this.a=a;
-            this.b=b;
-        }
-        public LaazyContainer(A a){
-            this.a=a;
-        }
-    }
-    //custom math
-    private static class MyMath{
-        public static double clamp(double a, double b, double c){
-            return (b<a)?(a):((c<b)?(c):(b));
-        }
+    //=======================================================================================================custom math
+    public static class MyMath{
+        /**
+         * method returns value between from and to.
+         * @param from lowest value function can return
+         * @param val desired value function can return
+         * @param to highest value function can return
+         */
+        public static double clamp(double from, double val, double to){return (val<from)?(from):((to<val)?(to):(val));}
+        /**
+         * method returns IF value IS between from and to, regardless of what is greater ('from','to')
+         * @param from one of border values
+         * @param val check value
+         * @param to one of border values
+         */
+        public static boolean inRange(double from, double val, double to){return (from<to)?(from<=val&&val<=to):(to<=val&&val<=from);}
+        /**
+         * @return d*d
+         */
         public static double pow2(double d){return d*d;}
-        public static double abs(double d){
-            return (d<0)?(-d):(d);
-        }
+        /**
+         * @return positive double of value d
+         */
+        public static double abs(double d){return (d<0)?(-d):(d);}
     }
-    //vectors
+    //===========================================================================================================vectors
     private static class Vector2{
         public double x =0, y =0;
 
@@ -114,11 +67,11 @@ public class Attempt2  extends Application {
         public Vector2 abs(){
             return new Vector2(MyMath.abs(x),MyMath.abs(y));
         }
-        public Vector2 mul(double a){
+        public Vector2 multiply(double a){
             return new Vector2(x*a,y*a);
         }
 
-        public double vectorDistance() {
+        public double length() {
             return Math.pow(MyMath.pow2(x) + MyMath.pow2(y), 0.5d);
         }
 
@@ -141,6 +94,7 @@ public class Attempt2  extends Application {
             return Objects.hash(x, y);
         }
     }
+    //===================================================================
     private static class Vector3{
         public double x =0, y =0, z =0;
 
@@ -160,8 +114,11 @@ public class Attempt2  extends Application {
         public Vector3 abs(){
             return new Vector3(MyMath.abs(x),MyMath.abs(y),MyMath.abs(z));
         }
+        public Vector3 multiply(double a){
+            return new Vector3(x*a,y*a,z*a);
+        }
 
-        public double vectorDistance(){
+        public double length(){
             return Math.pow(MyMath.pow2(x)+MyMath.pow2(y)+MyMath.pow2(z),0.5d);
         }
 
@@ -185,6 +142,112 @@ public class Attempt2  extends Application {
             return Objects.hash(x, y, z);
         }
     }
+    //============================================================================================================matrix
+    private static class Matrix2{
+        public double
+                d00,d01,// cos(t)/-sin(t)
+                d10,d11,// sin(t)/ cos(t)
+        rotation;
+        public Matrix2(){
+            d00=0;d01=0;
+            d10=0;d11=0;
+            rotation=0;
+        }
+        public Matrix2(double rotationDeg){
+            this.rotation=rotationDeg;
+
+            double radians = (rotationDeg%360);//stay in 0-360
+            if(radians<0)radians+=360;//switch negative values to positive
+            radians*=Math.PI/180;//add PI end result =>  ( (360+ (rotationDeg%360) )%360 )*(2*Math.PI/360); // but cheaper (avoided another '%')
+
+            d00=Math.cos(radians);d01=-Math.sin(radians);
+            d10=-d01;             d11=d00;
+        }
+        public Vector2 rotate(Vector2 relative){
+            return new Vector2(
+                    (relative.x*d00)+(relative.y*d01),
+                    (relative.x*d10)+(relative.y*d11)
+            );
+        }
+
+        @Override
+        public String toString() {
+            return "Matrix2{" +
+                    "d00=" + d00 +
+                    ", d01=" + d01 +
+                    ", d10=" + d10 +
+                    ", d11=" + d11 +
+                    ", rotation=" + rotation +
+                    '}';
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Matrix2 matrix2 = (Matrix2) o;
+            return Double.compare(matrix2.d00, d00) == 0 && Double.compare(matrix2.d01, d01) == 0 && Double.compare(matrix2.d10, d10) == 0 && Double.compare(matrix2.d11, d11) == 0;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(d00, d01, d10, d11);
+        }
+    }
+    //===================================================================
+    private static class Matrix3{
+        public double
+                d00,d01,d02,
+                d10,d11,d12,
+                d20,d21,d22,
+        rotationX,rotationY,rotationZ;
+        public Matrix3(){
+            d00=0;d01=0;d02=0;
+            d10=0;d11=0;d12=0;
+            d20=0;d21=0;d22=0;
+            rotationX=0;
+            rotationY=0;
+            rotationZ=0;
+        }
+        public Matrix3(double rotationX, double rotationY, double rotationZ){
+            this.rotationX=rotationX;
+            this.rotationY=rotationY;
+            this.rotationZ=rotationZ;
+
+            //todo implement
+        }
+        public Vector3 rotate(Vector3 relative){
+            //todo implement
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return "Matrix3{" +
+                    "d00=" + d00 +
+                    ", d01=" + d01 +
+                    ", d02=" + d02 +
+                    ", d10=" + d10 +
+                    ", d11=" + d11 +
+                    ", d12=" + d12 +
+                    ", d20=" + d20 +
+                    ", d21=" + d21 +
+                    ", d22=" + d22 +
+                    ", rotationX=" + rotationX +
+                    ", rotationY=" + rotationY +
+                    ", rotationZ=" + rotationZ +
+                    '}';
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Matrix3 matrix3 = (Matrix3) o;
+            return Double.compare(matrix3.d00, d00) == 0 && Double.compare(matrix3.d01, d01) == 0 && Double.compare(matrix3.d02, d02) == 0 && Double.compare(matrix3.d10, d10) == 0 && Double.compare(matrix3.d11, d11) == 0 && Double.compare(matrix3.d12, d12) == 0 && Double.compare(matrix3.d20, d20) == 0 && Double.compare(matrix3.d21, d21) == 0 && Double.compare(matrix3.d22, d22) == 0;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(d00, d01, d02, d10, d11, d12, d20, d21, d22);
+        }
+    }
     //==================================================================================================================primitive classes
     private static class AABB2{
         public Vector2 center, halfSize;
@@ -197,6 +260,7 @@ public class Attempt2  extends Application {
             return delta.x <0||delta.y <0;
         }
     }
+    //===================================================================
     private static class Line2{
         public Vector2 start, end;
         public Line2(){
@@ -210,11 +274,16 @@ public class Attempt2  extends Application {
         public boolean collide(Vector2 point){
             Vector2 relativeEnd = end.substract(start),
                     relativePoint = point.substract(start);
+            //this ver return if point lies on INFINITE line. not this 'part' of line
             return relativeEnd//'original' solution. apparently works
-                    .mul(relativePoint.x)
-                    .equals(relativePoint.mul(relativeEnd.x));
+                    .multiply(relativePoint.x)
+                    .equals(relativePoint.multiply(relativeEnd.x))&&
+                    //this part is added so ensure that we are on this 'part' of line
+                    MyMath.inRange(0,relativePoint.x,relativeEnd.x)&&
+                    MyMath.inRange(0,relativePoint.y,relativeEnd.y);
         }
     }
+    //===================================================================
     private static abstract class RigidBody2 {
         public Vector2 position,
                        scale;
@@ -224,16 +293,68 @@ public class Attempt2  extends Application {
             scale = new Vector2(1,1);
             rotation = 0;
         }
+        public RigidBody2(Vector2 position){
+            this.position=position;
+        }
+        public RigidBody2(Vector2 position,double rotation){
+            this.position=position;
+            this.rotation=rotation;
+        }
+        public RigidBody2(Vector2 position,Vector2 scale){
+            this.position=position;
+            this.scale=scale;
+        }
+        public RigidBody2(Vector2 position,Vector2 scale,double rotation){
+            this.position=position;
+            this.scale=scale;
+            this.rotation=rotation;
+        }
+
+        //===================================================================Fx Part
         abstract public Node getShape();
+        public abstract boolean collide(Vector2 point);
     }
+    //===================================================================
     private static class Box2 extends RigidBody2 {
+        public Vector2 halfSize;
+        public Box2(){
+            super();
+            halfSize = new Vector2(1,1);
+        }
+        public Box2(Vector2 position, Vector2 scale, double rotation, Vector2 halfSize){
+            super(position,scale,rotation);
+            this.halfSize=halfSize;
+        }
+
+        @Override
+        public boolean collide(Vector2 point) {//todo write this func
+            return false;
+        }
+
+        //===================================================================Fx Part
         public Box box;
         @Override
         public Node getShape() {
             return box;
         }
     }
+    //===================================================================
     private static class Circe2 extends RigidBody2 {
+        public double radius;
+        public Circe2(){
+            super();
+            radius = 1;
+        }
+        public Circe2(Vector2 position, Vector2 scale, double rotation, double radius){
+            super(position,scale,rotation);
+            this.radius=radius;
+        }
+
+        @Override
+        public boolean collide(Vector2 point) {
+            return radius<=point.substract(position).length();
+        }
+        //===================================================================Fx Part
         public Sphere sphere;
         @Override
         public Node getShape() {
@@ -246,11 +367,12 @@ public class Attempt2  extends Application {
     }
     //==================================================================================================================Fx classes
     public static void main(String[] args) {
-        boolean b = new Line2(new Vector2(0,1),new Vector2(8,5)).collide(new Vector2(4,3));
+        Vector2 test = new Matrix2(36).rotate(new Vector2(7,12));
 
-
-        //launch(args);
+        int x = 2;
+        launch(args);
     }
+    //===================================================================
     private Group root;
     private PerspectiveCamera camera;
     private Scene scene;
@@ -266,7 +388,7 @@ public class Attempt2  extends Application {
             g=100;
     private int max = 3;
     private long then=0;
-
+    //===================================================================
     private class Time extends AnimationTimer {
         @Override
         public void handle(long now) {
@@ -276,7 +398,7 @@ public class Attempt2  extends Application {
             then=now;
         }
     }
-
+    //===================================================================
     public void start(Stage primaryStage) {
         //here is init
         {
