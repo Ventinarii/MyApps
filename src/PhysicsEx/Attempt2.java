@@ -17,6 +17,7 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 //partially based of tutorial series: https://www.youtube.com/watch?v=vcgtwY39FT0&list=PLtrSb4XxIVbpZpV65kk73OoUcIrBzoSiO&index=1
@@ -47,6 +48,17 @@ public class Attempt2  extends Application {
          * @return positive double of value d
          */
         public static double abs(double d){return (d<0)?(-d):(d);}
+        /**
+         * method returns angle expressed in radians for needs of external trigonometry functions
+         * @angle angle expressed in degress (360')
+         * @return angle expressed in radians (2PI)
+         */
+        public static double degToRadians(double angle){
+            double radians = (angle%360);//stay in 0-360
+            if(radians<0)radians+=360;//switch negative values to positive
+            radians*=Math.PI/180;//add PI end result =>  ( (360+ (rotationDeg%360) )%360 )*(2*Math.PI/360); // but cheaper (avoided another '%')
+            return radians;
+        }
     }
     //===========================================================================================================vectors
     private static class Vector2{
@@ -155,10 +167,7 @@ public class Attempt2  extends Application {
         }
         public Matrix2(double rotationDeg){
             this.rotation=rotationDeg;
-
-            double radians = (rotationDeg%360);//stay in 0-360
-            if(radians<0)radians+=360;//switch negative values to positive
-            radians*=Math.PI/180;//add PI end result =>  ( (360+ (rotationDeg%360) )%360 )*(2*Math.PI/360); // but cheaper (avoided another '%')
+            double radians = MyMath.degToRadians(rotationDeg);
 
             d00=Math.cos(radians);d01=-Math.sin(radians);
             d10=-d01;             d11=d00;
@@ -192,48 +201,109 @@ public class Attempt2  extends Application {
             return Objects.hash(d00, d01, d10, d11);
         }
     }
-    //===================================================================
     private static class Matrix3{
-        public double
-                d00,d01,d02,
-                d10,d11,d12,
-                d20,d21,d22,
-        rotationX,rotationY,rotationZ;
-        public Matrix3(){
-            d00=0;d01=0;d02=0;
-            d10=0;d11=0;d12=0;
-            d20=0;d21=0;d22=0;
-            rotationX=0;
-            rotationY=0;
-            rotationZ=0;
-        }
-        public Matrix3(double rotationX, double rotationY, double rotationZ){
-            this.rotationX=rotationX;
-            this.rotationY=rotationY;
-            this.rotationZ=rotationZ;
+        public static final int Xaxis = 1, Yaxis = 2, Zaxis =3;
+        public double[][] matrix = new double[3][3];
+        private Matrix3 pow_1;
 
-            //todo implement
+        public Matrix3(){}
+        public Matrix3(double[][] matrix){
+            if(
+                    matrix.length!=3||
+                    matrix[0].length!=3||
+                    matrix[1].length!=3||
+                    matrix[2].length!=3)
+                new Exception("invalid matrix dimension").printStackTrace();
+            this.matrix=matrix;
         }
-        public Vector3 rotate(Vector3 relative){
-            //todo implement
-            return null;
+        public Matrix3(double rotation, int axis){
+            double radians = MyMath.degToRadians(rotation),
+                sin=Math.sin(radians),
+                cos=Math.cos(radians);
+            switch (axis){
+                case Xaxis:{
+                    matrix[0][0]=1;matrix[0][1]=0;  matrix[0][2]=0;
+                    matrix[1][0]=0;matrix[1][1]=cos;matrix[1][2]=-sin;
+                    matrix[2][0]=0;matrix[2][1]=sin;matrix[2][2]=cos;
+                }break;
+                case Yaxis:{
+                    matrix[0][0]=cos;  matrix[0][1]=0;matrix[0][2]=sin;
+                    matrix[1][0]=0;    matrix[1][1]=1;matrix[1][2]=0;
+                    matrix[2][0]=0-sin;matrix[2][1]=0;matrix[2][2]=cos;
+                }break;
+                case Zaxis:{
+                    matrix[0][0]=cos;matrix[0][1]=-sin;matrix[0][2]=0;
+                    matrix[1][0]=sin;matrix[1][1]=cos; matrix[1][2]=0;
+                    matrix[2][0]=0;  matrix[2][1]=0;   matrix[2][2]=1;
+                }break;
+                default: new Exception("invalid rotataion axis: "+axis).printStackTrace();
+            }
         }
+
+        public Matrix3 getPow_1(){
+            if(pow_1==null){
+                //prep
+                double[][] mat = new double[3][3];
+                double
+                        a,b,c,A,B,C,
+                        d,e,f,D,E,F,
+                        g,h,i,G,H,I;
+                a=matrix[0][0];b=matrix[0][1];c=matrix[0][2];
+                d=matrix[1][0];e=matrix[1][1];f=matrix[1][2];
+                g=matrix[2][0];h=matrix[2][1];i=matrix[2][2];
+                //find determinants of 2x2 sub matrices
+                A=det(e,f,h,i);B=det(d,f,g,i);C=det(d,e,g,h);
+                D=det(b,c,h,i);E=det(a,c,g,i);F=det(a,b,g,h);
+                G=det(b,c,e,f);H=det(a,d,c,f);I=det(a,b,d,e);
+                //cofactor matrix
+                     B=-B;
+                D=-D;     F=-F;
+                     H=-H;
+                //transpose
+                /*ADG
+                //BEH
+                  CFI*/
+                //insert into struct
+                mat[0][0]=A;mat[0][1]=D;mat[0][1]=G;
+                mat[1][0]=B;mat[1][1]=E;mat[1][1]=H;
+                mat[2][0]=C;mat[2][1]=F;mat[2][1]=I;
+                //create new object
+                pow_1 = new Matrix3(mat);
+            }
+            return pow_1;
+        }//todo validate
+        public Vector3 multiply(Vector3 vector){
+            return new Vector3(
+                    vector.x*matrix[0][0]+vector.y*matrix[0][1]+vector.z*matrix[0][2],
+                    vector.x*matrix[1][0]+vector.y*matrix[1][1]+vector.z*matrix[1][2],
+                    vector.x*matrix[2][0]+vector.y*matrix[2][1]+vector.z*matrix[2][2]
+            );
+        }//todo validate
+        public Matrix3 multiply(Matrix3 matrix3){
+            //    | A B C
+            //    | D E F
+            //    | G H I
+            //a b c X X X
+            //d e f X X X
+            //g h i X X X
+            double[][] mat = new double[3][3],
+                    MATRIX = matrix3.matrix;
+            for(int y = 0; y<3; y++)
+                for(int x = 0; x<3; x++)
+                    mat[y][x]=matrix[y][0]*MATRIX[0][x]+matrix[y][1]*MATRIX[1][x]+matrix[y][2]*MATRIX[2][x];
+            return new Matrix3(mat);
+        }///todo validate
+        public Vector3 divide(Vector3 vector){
+            return getPow_1().multiply(vector);
+        }
+        public Matrix3 divide(Matrix3 matrix3){
+            return getPow_1().multiply(matrix3);
+        }//todo validate
 
         @Override
         public String toString() {
             return "Matrix3{" +
-                    "d00=" + d00 +
-                    ", d01=" + d01 +
-                    ", d02=" + d02 +
-                    ", d10=" + d10 +
-                    ", d11=" + d11 +
-                    ", d12=" + d12 +
-                    ", d20=" + d20 +
-                    ", d21=" + d21 +
-                    ", d22=" + d22 +
-                    ", rotationX=" + rotationX +
-                    ", rotationY=" + rotationY +
-                    ", rotationZ=" + rotationZ +
+                    "matrix=" + Arrays.toString(matrix) +
                     '}';
         }
         @Override
@@ -241,12 +311,173 @@ public class Attempt2  extends Application {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Matrix3 matrix3 = (Matrix3) o;
-            return Double.compare(matrix3.d00, d00) == 0 && Double.compare(matrix3.d01, d01) == 0 && Double.compare(matrix3.d02, d02) == 0 && Double.compare(matrix3.d10, d10) == 0 && Double.compare(matrix3.d11, d11) == 0 && Double.compare(matrix3.d12, d12) == 0 && Double.compare(matrix3.d20, d20) == 0 && Double.compare(matrix3.d21, d21) == 0 && Double.compare(matrix3.d22, d22) == 0;
+            return Arrays.equals(matrix, matrix3.matrix);
         }
         @Override
         public int hashCode() {
-            return Objects.hash(d00, d01, d02, d10, d11, d12, d20, d21, d22);
+            return Arrays.hashCode(matrix);
         }
+
+        /**
+         * input matrix
+         * |a b|
+         * |c d|
+         */
+        private double det(double a,double b,double c,double d){
+            return a*d-b*c;
+        }
+    }
+    //===================================================================
+    @Deprecated
+    private static class QuaternionPrototype {//THIS IS...DIFFERENT. it is used for ROTATION.
+        public double
+                x00,x01,x02,
+                x10,x11,x12,
+                x20,x21,x22,
+                rotationX,
+                y00,y01,y02,
+                y10,y11,y12,
+                y20,y21,y22,
+                rotationY,
+                z00,z01,z02,
+                z10,z11,z12,
+                z20,z21,z22,
+                rotationZ;
+        public QuaternionPrototype(){
+            x00=0;x01=0;x02=0;
+            x10=0;x11=0;x12=0;
+            x20=0;x21=0;x22=0;
+            rotationX=0;
+            y00=0;y01=0;y02=0;
+            y10=0;y11=0;y12=0;
+            y20=0;y21=0;y22=0;
+            rotationY=0;
+            z00=0;z01=0;z02=0;
+            z10=0;z11=0;z12=0;
+            z20=0;z21=0;z22=0;
+            rotationZ=0;
+        }
+        public QuaternionPrototype(double rotationX, double rotationY, double rotationZ){
+            double radians=0;
+            double sin=0,cos=0;
+
+            this.rotationX=rotationX;
+            radians = MyMath.degToRadians(rotationX);
+            sin = Math.sin(radians);
+            cos = Math.cos(radians);
+
+            x00=1;x01=0;x02=0;
+            x10=0;x11=cos;x12=-sin;
+            x20=0;x21=sin;x22=cos;
+
+            this.rotationY=rotationY;
+            radians = MyMath.degToRadians(rotationY);
+            sin = Math.sin(radians);
+            cos = Math.cos(radians);
+
+            y00=cos; y01=0;y02=sin;
+            y10=0;   y11=1;y12=0;
+            y20=-sin;y21=0;y22=cos;
+
+            this.rotationZ=rotationZ;
+            radians = MyMath.degToRadians(rotationZ);
+            sin = Math.sin(radians);
+            cos = Math.cos(radians);
+
+            z00=cos;z01=-sin;z02=0;
+            z10=sin;z11=cos; z12=0;
+            z20=0;  z21=0;   z22=1;
+        }
+        public Vector3 rotate(Vector3 relative){
+            /*     |A|
+            *      |B|
+            *      |C|
+            * - - - -
+            * a b c|X|    |X=A*a+B*b+C*c|
+            * d e f|Y| => |Y=A*d+B*e+C*f| x3
+            * g h i|Z|    |Z=A*g+B*h+C*i|
+            * - - - -
+            * */
+            Vector3 ret = relative;
+            ret = new Vector3(
+                    ret.x*x00+ret.y+x01+ret.z*x02,
+                    ret.x*x10+ret.y+x11+ret.z*x12,
+                    ret.x*x20+ret.y+x21+ret.z*x22
+            );
+            ret = new Vector3(
+                    ret.x*y00+ret.y+y01+ret.z*y02,
+                    ret.x*y10+ret.y+y11+ret.z*y12,
+                    ret.x*y20+ret.y+y21+ret.z*y22
+            );
+            ret = new Vector3(
+                    ret.x*z00+ret.y+z01+ret.z*z02,
+                    ret.x*z10+ret.y+z11+ret.z*z12,
+                    ret.x*z20+ret.y+z21+ret.z*z22
+            );
+
+            //todo validate if correct
+            return ret;
+        }
+    }
+    //===================================================================
+    private static class Quaternion{
+        public Matrix3 rotationMatrixX, rotationMatrixY, rotationMatrixZ;
+        private double rotationX, rotationY, rotationZ;
+
+        public double getRotationX() {
+            return rotationX;
+        }
+        public Quaternion setRotationX(double rotation){
+            rotationX=rotation;
+            rotationMatrixX=new Matrix3(rotation,Matrix3.Xaxis);
+            return this;
+        }
+        public double getRotationY() {
+            return rotationY;
+        }
+        public Quaternion setRotationY(double rotation){
+            rotationY=rotation;
+            rotationMatrixY=new Matrix3(rotation,Matrix3.Yaxis);
+            return this;
+        }
+        public double getRotationZ() {
+            return rotationZ;
+        }
+        public Quaternion setRotationZ(double rotation){
+            rotationZ=rotation;
+            rotationMatrixZ=new Matrix3(rotation,Matrix3.Zaxis);
+            return this;
+        }
+
+        public Quaternion(){
+            rotationX=0;
+            rotationY=0;
+            rotationZ=0;
+            rotationMatrixX=new Matrix3(0,Matrix3.Xaxis);
+            rotationMatrixY=new Matrix3(0,Matrix3.Yaxis);
+            rotationMatrixZ=new Matrix3(0,Matrix3.Zaxis);
+        }
+        public Quaternion(double rotationX,double rotationY,double rotationZ){
+            this.rotationX=rotationX;
+            this.rotationY=rotationY;
+            this.rotationZ=rotationZ;
+            rotationMatrixX=new Matrix3(rotationX,Matrix3.Xaxis);
+            rotationMatrixY=new Matrix3(rotationY,Matrix3.Yaxis);
+            rotationMatrixZ=new Matrix3(rotationZ,Matrix3.Zaxis);
+        }//todo validate
+
+        public Vector3 rotate(Vector3 relative){
+            return
+                    rotationMatrixZ.multiply(
+                    rotationMatrixY.multiply(
+                    rotationMatrixX.multiply(relative)));
+        }//todo validate
+        public Vector3 unRotate(Vector3 relative){
+            return
+                    rotationMatrixX.divide(
+                    rotationMatrixY.divide(
+                    rotationMatrixZ.divide(relative)));
+        }//todo validate
     }
     //==================================================================================================================primitive classes
     private static class AABB2{
@@ -367,7 +598,7 @@ public class Attempt2  extends Application {
     }
     //==================================================================================================================Fx classes
     public static void main(String[] args) {
-        Vector2 test = new Matrix2(36).rotate(new Vector2(7,12));
+        Matrix3 mat = new Matrix3(new double[][]{{3,3,3},{3,3,3},{3,3,3}});
 
         int x = 2;
         launch(args);
