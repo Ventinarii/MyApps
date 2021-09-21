@@ -1,13 +1,11 @@
 package PhysicsEx.Attempt2;
-import PhysicsEx.Attempt2.Physics2d.Colider2;
-import PhysicsEx.Attempt2.Physics2d.Vector2;
+import PhysicsEx.Attempt2.Physics2d.rigidbody.RigidBody2;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
@@ -15,12 +13,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.shape.CullFace;
-import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.Collectors;
 //partially based of tutorial series: https://www.youtube.com/watch?v=vcgtwY39FT0&list=PLtrSb4XxIVbpZpV65kk73OoUcIrBzoSiO&index=1
 //testing JavaDoc in practice
@@ -36,7 +31,7 @@ public class Core extends Application {
     private PerspectiveCamera camera;
     private Scene scene;
     private Time clock;
-    private ArrayList<Colider2> simlulate = new ArrayList<>();
+    private ArrayList<Actor> simlulate = new ArrayList<>();
     private double
             mX=-100,
             xX=100,
