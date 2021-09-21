@@ -50,7 +50,7 @@ public class Box2 extends Actor {
         return null;
     }
 
-    @Override
+
     public boolean collide(Vector2 point) {//todo write this func
         return false;
     }

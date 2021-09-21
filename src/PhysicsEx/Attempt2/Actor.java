@@ -7,5 +7,4 @@ public abstract class Actor {
 
 
     abstract public Node getShape();
-    public abstract boolean collide(Vector2 point);
 }

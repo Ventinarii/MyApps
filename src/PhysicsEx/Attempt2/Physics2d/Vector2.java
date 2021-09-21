@@ -1,5 +1,7 @@
 package PhysicsEx.Attempt2.Physics2d;
 import PhysicsEx.Attempt2.MyMath;
+import PhysicsEx.Attempt2.Physics2d.rigidbody.IntersectionDetector2;
+
 import java.util.Objects;
 
  public class Vector2{
@@ -26,6 +28,19 @@ import java.util.Objects;
 
     public double length() {
         return Math.pow(MyMath.pow2(x) + MyMath.pow2(y), 0.5d);
+    }
+     /**
+      * method returns 1 IF to is GREATER; 0 if EQUAL; and -1 IF LESSER; than THIS vector
+      * @return range {-1,0,1}
+      */
+    public int compareLength(Vector2 to){
+        double  thisLength = MyMath.pow2(x)+MyMath.pow2(y),
+               otherLength = MyMath.pow2(to.x)+MyMath.pow2(to.y);
+        if(MyMath.inRange(-IntersectionDetector2.tolerance,thisLength-otherLength,IntersectionDetector2.tolerance))
+            return 0;
+        if(0<=thisLength-otherLength)
+            return 1;
+        return -1;
     }
 
     @Override

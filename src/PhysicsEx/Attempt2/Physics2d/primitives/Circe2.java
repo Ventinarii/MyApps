@@ -7,21 +7,17 @@ import javafx.scene.shape.Sphere;
 
 public class Circe2 extends Actor {
     public double radius;
+    public RigidBody2 rigidBody2;
+
     public Circe2(){
         super();
         radius = 1;
     }
     public Circe2(Vector2 position, Vector2 scale, double rotation, double radius){
-        //super(position,scale,rotation);
+        rigidBody2 = new RigidBody2(position,scale,rotation);
         this.radius=radius;
     }
 
-
-    @Override
-    public boolean collide(Vector2 point) {
-        return false;
-        //return radius<=point.substract(position).length();
-    }
     //===================================================================Fx Part
     public Sphere sphere;
     @Override
