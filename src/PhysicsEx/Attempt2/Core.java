@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 //partially based of tutorial series: https://www.youtube.com/watch?v=vcgtwY39FT0&list=PLtrSb4XxIVbpZpV65kk73OoUcIrBzoSiO&index=1
 //testing JavaDoc in practice
 public class Core extends Application {
+    public static final boolean enable3d = false;
     //==================================================================================================================Fx classes
     public static void main(String[] args) {
 

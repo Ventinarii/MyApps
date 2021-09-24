@@ -15,6 +15,17 @@ public class MyMath{
      * @param to one of border values
      */
     public static boolean inRange(double from, double val, double to){return (from<to)?(from<=val&&val<=to):(to<=val&&val<=from);}
+
+    public static final double tolerance = 0.0001;
+
+    /**     *
+     * @param d1 value
+     * @param d2 comparison
+     * @return returns bool if equal with error within @tolerance (0.0001d)
+     */
+    public static boolean equal(double d1, double d2){
+        return (abs(d1-d2))<=(tolerance);
+    }
     /**
      * @return d*d
      */
@@ -34,4 +45,6 @@ public class MyMath{
         radians*=Math.PI/180;//add PI end result =>  ( (360+ (rotationDeg%360) )%360 )*(2*Math.PI/360); // but cheaper (avoided another '%')
         return radians;
     }
+
+
 }

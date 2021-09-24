@@ -7,6 +7,8 @@ import PhysicsEx.Attempt2.Physics2d.Vector2;
 import javafx.scene.Node;
 import javafx.scene.shape.Box;
 
+import static PhysicsEx.Attempt2.MyMath.abs;
+
 public class Box2 extends Actor {
     public Vector2 halfSize;
     public RigidBody2 rigidBody2;
@@ -30,7 +32,7 @@ public class Box2 extends Actor {
         arr[3]=arr[1].multiply(-1);
 
         //rotate if need
-        if(0.01<=MyMath.abs(rigidBody2.rotation)){
+        if(0.01<=abs(rigidBody2.rotation)){
             Matrix2 rotate = new Matrix2(rigidBody2.rotation);
             for(int x=0;x<arr.length;x++)
                 arr[x]=rotate.rotate(arr[x]);
@@ -50,10 +52,6 @@ public class Box2 extends Actor {
         return null;
     }
 
-
-    public boolean collide(Vector2 point) {//todo write this func
-        return false;
-    }
     //===================================================================Fx Part
     public Box box;
     @Override
