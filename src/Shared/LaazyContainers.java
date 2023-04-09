@@ -1,4 +1,4 @@
-package PhysicsEx;
+package Shared;
 
 import java.util.Objects;
 
